@@ -1,0 +1,143 @@
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+public class ATMApp extends Application {
+
+    private String correctPin = "1234";
+    private double balance = 1000.0;
+    private boolean authenticated = false;
+
+    private TextField pinInput = new TextField();
+    private Label screen = new Label("Please enter your PIN");
+    private Button submitButton = new Button("Submit");
+    private Button checkBalanceButton = new Button("Check Balance");
+    private Button withdrawButton = new Button("Withdraw");
+    private Button exchangeButton = new Button("Currency Exchange");
+    private TextField withdrawalInput = new TextField();
+    private Button confirmButton = new Button("Confirm Withdrawal");
+    private TextField exchangeAmountInput = new TextField();
+    private ComboBox<String> currencySelector = new ComboBox<>();
+    private Button confirmExchangeButton = new Button("Confirm Exchange");
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("ATM Simulator");
+
+        VBox layout = new VBox(10);
+        layout.setPadding(new javafx.geometry.Insets(20));
+
+        pinInput.setPromptText("Enter your PIN");
+        pinInput.setVisible(true);
+
+        submitButton.setOnAction(e -> submitPin());
+        checkBalanceButton.setOnAction(e -> checkBalance());
+        withdrawButton.setOnAction(e -> withdraw());
+        confirmButton.setOnAction(e -> confirmWithdrawal());
+        exchangeButton.setOnAction(e -> openCurrencyExchange());
+        confirmExchangeButton.setOnAction(e -> confirmCurrencyExchange());
+
+        layout.getChildren().addAll(screen, pinInput, submitButton, checkBalanceButton, withdrawButton, exchangeButton, withdrawalInput, confirmButton, exchangeAmountInput, currencySelector, confirmExchangeButton);
+        
+        withdrawalInput.setPromptText("Amount to withdraw");
+        withdrawalInput.setVisible(false);
+        checkBalanceButton.setVisible(false);
+        withdrawButton.setVisible(false);
+        confirmButton.setVisible(false);
+        
+        exchangeAmountInput.setPromptText("Amount to exchange");
+        exchangeAmountInput.setVisible(false);
+        currencySelector.setVisible(false);
+        confirmExchangeButton.setVisible(false);
+
+        currencySelector.getItems().addAll("USD to EUR", "USD to GBP", "USD to JPY");
+
+        Scene scene = new Scene(layout, 300, 350);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void submitPin() {
+        String pin = pinInput.getText();
+        if (pin.equals(correctPin)) {
+            authenticated = true;
+            screen.setText("Welcome!");
+            pinInput.setVisible(false);
+            submitButton.setVisible(false);
+            checkBalanceButton.setVisible(true);
+            withdrawButton.setVisible(true);
+            exchangeButton.setVisible(true);
+        } else {
+            screen.setText("Invalid PIN! Try again.");
+        }
+    }
+
+    private void checkBalance() {
+        screen.setText("Balance: $" + balance);
+    }
+
+    private void withdraw() {
+        withdrawalInput.setVisible(true);
+        confirmButton.setVisible(true);
+        screen.setText("Enter amount to withdraw:");
+    }
+
+    private void confirmWithdrawal() {
+        try {
+            double amount = Double.parseDouble(withdrawalInput.getText());
+            if (amount > 0 && amount <= balance) {
+                balance -= amount;
+                screen.setText("Withdrawal of $" + amount + " successful!");
+                withdrawalInput.clear();
+            } else {
+                screen.setText("Insufficient funds or invalid amount!");
+            }
+        } catch (NumberFormatException e) {
+            screen.setText("Please enter a valid amount!");
+        }
+    }
+
+    private void openCurrencyExchange() {
+        exchangeAmountInput.setVisible(true);
+        currencySelector.setVisible(true);
+        confirmExchangeButton.setVisible(true);
+        screen.setText("Select currency and enter amount to exchange:");
+    }
+
+    private void confirmCurrencyExchange() {
+        try {
+            double amount = Double.parseDouble(exchangeAmountInput.getText());
+            String selectedCurrency = currencySelector.getValue();
+            if (amount > 0 && selectedCurrency != null) {
+                double exchangedAmount = convertCurrency(amount, selectedCurrency);
+                screen.setText("Exchanged: $" + amount + " to " + String.format("%.2f", exchangedAmount) + " " + selectedCurrency);
+                exchangeAmountInput.clear();
+                currencySelector.setValue(null);
+            } else {
+                screen.setText("Please enter a valid amount and select a currency!");
+            }
+        } catch (NumberFormatException e) {
+            screen.setText("Please enter a valid amount!");
+        }
+    }
+
+    private double convertCurrency(double amount, String currency) {
+        switch (currency) {
+            case "USD to EUR":
+                return amount * 0.85; // Example conversion rate
+            case "USD to GBP":
+                return amount * 0.75; // Example conversion rate
+            case "USD to JPY":
+                return amount * 110.0; // Example conversion rate
+            default:
+                return amount;
+        }
+    }
+}
+
